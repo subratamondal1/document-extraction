@@ -32,3 +32,5 @@ if uploaded_image:
       st.success("Image processed successfully!")
     else:
       st.info("Please upload an image to see the results.")
+
+st.sidebar.info("[Feedback & Suggestions](mailto:subrata@thealgohype.com)")
