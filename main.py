@@ -4,6 +4,9 @@ from preprocess_image import grayscale_contrast
 
 st.title("Document Extraction")
 
+# Display logo in the sidebar
+st.sidebar.image("logo.jpg", use_column_width=True)
+
 # Image uploader in the sidebar
 uploaded_image = st.sidebar.file_uploader("**Upload Image**",
                                           type=["jpg", "jpeg", "png"])
