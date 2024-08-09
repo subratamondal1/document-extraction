@@ -39,32 +39,32 @@ Converts the color image to a grayscale image. This simplifies the image data, m
      ```
 
 4. **Bilateral Filtering**:
-Applies a bilateral filter to reduce noise while preserving edges. This helps maintain the integrity of text features, making them clearer for subsequent processing.
+An image processing technique that smooths an image while preserving edges. It averages the colors of nearby pixels, but only considers those that are similar in color, effectively reducing noise while maintaining important details.
 
    ```python
      filtered = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
      ```
 
 5. **Adaptive Thresholding**:
-Converts the filtered grayscale image into a binary image using adaptive thresholding. This technique enhances the contrast between the text and the background, making the text more distinguishable.
+A method used to create a binary image based on local pixel intensity. It analyzes the neighborhood of each pixel and dynamically determines the threshold value, ensuring that text in bright areas stands out against a darker background and vice versa.
 
    ```python
      adaptive_thresh = cv2.adaptiveThreshold(filtered, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
      ```
 
 6. **Morphological Operations**:
-Applies morphological closing to the binary image. This operation fills small holes in the text and connects nearby text components, enhancing the overall appearance of the text for better extraction.
+A set of image processing techniques that manipulate the structure of an image. They involve applying techniques like dilation and erosion to enhance or suppress certain features. **Dilation** adds pixels to the boundaries of objects, while **erosion** removes pixels from the edges. These operations help in connecting gaps, smoothing irregularities, and refining the appearance of text for better extraction. 
 
    ```python
      kernel = np.ones((3, 3), np.uint8)
      morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
      ```
-
+ 
 7. **Conversion to PIL Image**:
 Converts the processed NumPy array (binary image) back into a PIL Image object. This format is often required for further processing or display in applications like Streamlit.
-
+ 
    ```python
      pil_image = Image.fromarray(morph)
      ```
-
+ 
 These preprocessing steps collectively enhance the visibility of text in images while reducing noise and interference from other elements, making it easier for text extraction models to accurately read the text.
