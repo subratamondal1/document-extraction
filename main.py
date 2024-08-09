@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 from preprocess_image import grayscale_contrast
+import io
 
 st.markdown("<center><h1>📜📄 Document Extraction</h1></center>",
             unsafe_allow_html=True)
@@ -30,6 +31,19 @@ if uploaded_image:
         st.image(preprocessed_image,
                  caption="Processed Image",
                  use_column_width=True)
+
+    # Convert the preprocessed image to bytes for downloading
+    img_byte_arr = io.BytesIO()
+    preprocessed_image.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+
+    # Add a download button
+    st.download_button(
+        label="Download Processed Image",
+        data=img_byte_arr,
+        file_name="processed_image.png",
+        mime="image/png"
+    )
 
     # Display success message
     st.success("Image processed successfully!")
