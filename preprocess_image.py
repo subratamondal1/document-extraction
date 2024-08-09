@@ -3,7 +3,6 @@ import numpy as np
 from PIL import Image
 import io
 
-
 def grayscale_contrast(uploaded_image):
     """Returns a PIL Image object of the preprocessed image"""
     # Read the image from the uploaded file-like object
@@ -19,14 +18,19 @@ def grayscale_contrast(uploaded_image):
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Apply histogram equalization to increase contrast
-    equalized = cv2.equalizeHist(gray)
+    # Apply bilateral filter to reduce noise while preserving edges
+    filtered = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
 
-    # Apply sharpening filter
-    kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-    sharpened = cv2.filter2D(equalized, -1, kernel)
+    # Apply adaptive thresholding
+    adaptive_thresh = cv2.adaptiveThreshold(
+        filtered, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+    )
+
+    # Optional: Morphological operations to enhance text
+    kernel = np.ones((3, 3), np.uint8)
+    morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
 
     # Convert the preprocessed image to a PIL Image object
-    pil_image = Image.fromarray(sharpened)
+    pil_image = Image.fromarray(morph)
 
     return pil_image
