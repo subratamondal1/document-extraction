@@ -12,8 +12,12 @@
 <img src="ss1.png"/>
 
 ---
+**grayscale contrast**
 
 <img src="ss3.png"/>
+
+**enhance color contrast**
+<img src="ss4.png"/>
 
 ## ⚙️Tech-Stack
 - **Python**
@@ -23,48 +27,106 @@
 - **Pandas**
 
 ## 🧤Image Preprocessing Steps
-1. **Image Reading**:
-Reads the uploaded image file and decodes it into a format that OpenCV can process. This converts the image from a file-like object to a NumPy array.
 
+### Purpose
+The `enhance_color_contrast` function is designed to preprocess an image by enhancing its color and contrast to make text more visible while reducing the effects of bleed-through. After enhancing the image, the function converts it into a black-and-white (binary) format, making it suitable for document analysis, OCR, or similar tasks where clear text visibility is crucial.
+
+### Function Signature
+```python
+def enhance_color_contrast(uploaded_image):
+```
+
+### Parameters
+- **`uploaded_image`**: 
+  - **Type**: File-like object (e.g., an uploaded image file)
+  - **Description**: This is the image file provided by the user. It is expected to be in a readable format like JPEG, PNG, etc.
+
+### Returns
+- **`bw_image`**:
+  - **Type**: PIL Image object
+  - **Description**: A black-and-white version of the processed image where the text is more visible, and the effects of bleed-through are minimized.
+
+### Step-by-Step Processing
+
+1. **Read the Image**
    ```python
-     file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
-     image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-     ```
+   file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
+   image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+   ```
+   - **Description**: Converts the uploaded file into an OpenCV-readable format. The image is decoded into a BGR color format.
 
-3. **Grayscale Conversion**:
-Converts the color image to a grayscale image. This simplifies the image data, making it easier to process for text extraction.
-
+2. **Check Image Validity**
    ```python
-     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-     ```
+   if image is None:
+       raise ValueError("Error: Unable to read the image. Please upload a valid image file.")
+   ```
+   - **Description**: Ensures that the image was loaded correctly. If the image is invalid, an error is raised.
 
-4. **Bilateral Filtering**:
-An image processing technique that smooths an image while preserving edges. It averages the colors of nearby pixels, but only considers those that are similar in color, effectively reducing noise while maintaining important details.
-
+3. **Convert Image to PIL Format**
    ```python
-     filtered = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
-     ```
+   pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+   ```
+   - **Description**: Converts the image from OpenCV’s BGR format to RGB and then to a PIL Image object for easier manipulation.
 
-5. **Adaptive Thresholding**:
-A method used to create a binary image based on local pixel intensity. It analyzes the neighborhood of each pixel and dynamically determines the threshold value, ensuring that text in bright areas stands out against a darker background and vice versa.
-
+4. **Enhance Contrast**
    ```python
-     adaptive_thresh = cv2.adaptiveThreshold(filtered, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-     ```
+   contrast_enhancer = ImageEnhance.Contrast(pil_image)
+   pil_image = contrast_enhancer.enhance(1.5)
+   ```
+   - **Description**: Increases the contrast of the image by a factor of 1.5. This step makes the text stand out more against the background.
 
-6. **Morphological Operations**:
-A set of image processing techniques that manipulate the structure of an image. They involve applying techniques like dilation and erosion to enhance or suppress certain features. **Dilation** adds pixels to the boundaries of objects, while **erosion** removes pixels from the edges. These operations help in connecting gaps, smoothing irregularities, and refining the appearance of text for better extraction. 
+5. **Enhance Color Saturation**
+   ```python
+   color_enhancer = ImageEnhance.Color(pil_image)
+   pil_image = color_enhancer.enhance(1.5)
+   ```
+   - **Description**: Enhances the color saturation by a factor of 1.5. This makes the colors in the image more vivid, which can further improve text visibility.
 
+6. **Convert Back to OpenCV Format**
    ```python
-     kernel = np.ones((3, 3), np.uint8)
-     morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
-     ```
- 
-7. **Conversion to PIL Image**:
-Converts the processed NumPy array (binary image) back into a PIL Image object. This format is often required for further processing or display in applications like Streamlit.
- 
+   enhanced_image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+   ```
+   - **Description**: Converts the enhanced image back to the BGR format for further processing in OpenCV.
+
+7. **Apply Optional Denoising**
    ```python
-     pil_image = Image.fromarray(morph)
-     ```
- 
-These preprocessing steps collectively enhance the visibility of text in images while reducing noise and interference from other elements, making it easier for text extraction models to accurately read the text.
+   denoised_image = cv2.fastNlMeansDenoisingColored(enhanced_image, None, 10, 10, 7, 21)
+   ```
+   - **Description**: Applies mild denoising to reduce any remaining noise in the image, which may have been intensified by the previous enhancements.
+
+8. **Convert Back to PIL Format**
+   ```python
+   final_pil_image = Image.fromarray(denoised_image)
+   ```
+   - **Description**: Converts the denoised image back to a PIL Image object for final processing.
+
+9. **Convert to Grayscale**
+   ```python
+   grayscale_image = final_pil_image.convert('L')
+   ```
+   - **Description**: Converts the enhanced image to grayscale. This step prepares the image for binarization.
+
+10. **Apply Binary Threshold for Black and White Conversion**
+    ```python
+    bw_image = grayscale_image.point(lambda x: 0 if x < 128 else 255, '1')
+    ```
+    - **Description**: Converts the grayscale image into a black-and-white (binary) image using a threshold value of 128. Pixels with a value below 128 are set to black, and pixels with a value of 128 or higher are set to white.
+
+11. **Return the Final Image**
+    ```python
+    return bw_image
+    ```
+    - **Description**: The final black-and-white image is returned, with enhanced text visibility and reduced bleed-through.
+
+### Example Usage
+```python
+# Assuming 'uploaded_file' is an image file object obtained from a file upload
+processed_image = enhance_color_contrast(uploaded_file)
+processed_image.show()  # Displays the processed black-and-white image
+```
+
+### Notes
+- **Adjustable Parameters**: The contrast and color saturation factors can be adjusted to better suit the specific characteristics of the image. The default factors are set to 1.5, but they can be increased or decreased depending on the desired level of enhancement.
+- **Denoising**: The denoising step is optional and can be adjusted or removed if the image is already clean or if noise reduction is not needed.
+
+This function is particularly useful for preprocessing scanned documents, where text needs to be **clearly visible**, and **bleed-through** from the other side of the page needs to be minimized.
