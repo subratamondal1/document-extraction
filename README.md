@@ -32,7 +32,7 @@
 ## 🧤Image Preprocessing Steps
 
 ### Purpose
-The `enhance_color_contrast` function is designed to preprocess an image by enhancing its color and contrast to make text more visible while reducing the effects of bleed-through. After enhancing the image, the function converts it into a black-and-white (binary) format, making it suitable for document analysis, OCR, or similar tasks where clear text visibility is crucial.
+The `enhance_color_contrast` function is designed to preprocess an image by enhancing its color and contrast to make text more visible while reducing the effects of bleed-through. After these enhancements, the image is converted to grayscale and its brightness is adjusted to achieve a clearer, more readable result.
 
 ### Function Signature
 ```python
@@ -42,12 +42,12 @@ def enhance_color_contrast(uploaded_image):
 ### Parameters
 - **`uploaded_image`**: 
   - **Type**: File-like object (e.g., an uploaded image file)
-  - **Description**: This is the image file provided by the user. It is expected to be in a readable format like JPEG, PNG, etc.
+  - **Description**: The image file provided by the user. It should be in a standard image format such as JPEG, PNG, etc.
 
 ### Returns
-- **`bw_image`**:
+- **`brightened_image`**:
   - **Type**: PIL Image object
-  - **Description**: A black-and-white version of the processed image where the text is more visible, and the effects of bleed-through are minimized.
+  - **Description**: A grayscale version of the processed image with enhanced brightness, making text more visible and reducing bleed-through.
 
 ### Step-by-Step Processing
 
@@ -56,46 +56,46 @@ def enhance_color_contrast(uploaded_image):
    file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
    image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
    ```
-   - **Description**: Converts the uploaded file into an OpenCV-readable format. The image is decoded into a BGR color format.
+   - **Description**: Converts the uploaded image file into a NumPy array and decodes it into an OpenCV-compatible BGR format image.
 
 2. **Check Image Validity**
    ```python
    if image is None:
        raise ValueError("Error: Unable to read the image. Please upload a valid image file.")
    ```
-   - **Description**: Ensures that the image was loaded correctly. If the image is invalid, an error is raised.
+   - **Description**: Ensures the image was loaded correctly. If the image cannot be read, an error is raised.
 
 3. **Convert Image to PIL Format**
    ```python
    pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
    ```
-   - **Description**: Converts the image from OpenCV’s BGR format to RGB and then to a PIL Image object for easier manipulation.
+   - **Description**: Converts the image from OpenCV's BGR format to RGB format and then to a PIL Image object for easier manipulation.
 
 4. **Enhance Contrast**
    ```python
    contrast_enhancer = ImageEnhance.Contrast(pil_image)
    pil_image = contrast_enhancer.enhance(1.5)
    ```
-   - **Description**: Increases the contrast of the image by a factor of 1.5. This step makes the text stand out more against the background.
+   - **Description**: Increases the contrast of the image by a factor of 1.5. This step helps make the text stand out more against the background.
 
 5. **Enhance Color Saturation**
    ```python
    color_enhancer = ImageEnhance.Color(pil_image)
    pil_image = color_enhancer.enhance(1.5)
    ```
-   - **Description**: Enhances the color saturation by a factor of 1.5. This makes the colors in the image more vivid, which can further improve text visibility.
+   - **Description**: Enhances the color saturation by a factor of 1.5, making the colors more vivid and improving text visibility.
 
 6. **Convert Back to OpenCV Format**
    ```python
    enhanced_image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
    ```
-   - **Description**: Converts the enhanced image back to the BGR format for further processing in OpenCV.
+   - **Description**: Converts the enhanced image back to OpenCV's BGR format for further processing.
 
-7. **Apply Optional Denoising**
+7. **Optional: Apply Mild Denoising**
    ```python
    denoised_image = cv2.fastNlMeansDenoisingColored(enhanced_image, None, 10, 10, 7, 21)
    ```
-   - **Description**: Applies mild denoising to reduce any remaining noise in the image, which may have been intensified by the previous enhancements.
+   - **Description**: Applies mild denoising to reduce any noise in the image, which might have been enhanced along with the contrast and saturation. This step is optional.
 
 8. **Convert Back to PIL Format**
    ```python
@@ -107,29 +107,30 @@ def enhance_color_contrast(uploaded_image):
    ```python
    grayscale_image = final_pil_image.convert('L')
    ```
-   - **Description**: Converts the enhanced image to grayscale. This step prepares the image for binarization.
+   - **Description**: Converts the image to grayscale (luminance mode), removing color information while retaining the intensity.
 
-10. **Apply Binary Threshold for Black and White Conversion**
+10. **Adjust Brightness**
     ```python
-    bw_image = grayscale_image.point(lambda x: 0 if x < 128 else 255, '1')
+    brightness_enhancer = ImageEnhance.Brightness(grayscale_image)
+    brightened_image = brightness_enhancer.enhance(1.2)
     ```
-    - **Description**: Converts the grayscale image into a black-and-white (binary) image using a threshold value of 128. Pixels with a value below 128 are set to black, and pixels with a value of 128 or higher are set to white.
+    - **Description**: Increases the brightness of the grayscale image by a factor of 1.2. This adjustment helps make the image appear lighter and improves text readability.
 
 11. **Return the Final Image**
     ```python
-    return bw_image
+    return brightened_image
     ```
-    - **Description**: The final black-and-white image is returned, with enhanced text visibility and reduced bleed-through.
+    - **Description**: Returns the final processed image, which is now in grayscale with enhanced brightness.
 
 ### Example Usage
 ```python
 # Assuming 'uploaded_file' is an image file object obtained from a file upload
 processed_image = enhance_color_contrast(uploaded_file)
-processed_image.show()  # Displays the processed black-and-white image
+processed_image.show()  # Displays the processed grayscale image with enhanced brightness
 ```
 
 ### Notes
-- **Adjustable Parameters**: The contrast and color saturation factors can be adjusted to better suit the specific characteristics of the image. The default factors are set to 1.5, but they can be increased or decreased depending on the desired level of enhancement.
-- **Denoising**: The denoising step is optional and can be adjusted or removed if the image is already clean or if noise reduction is not needed.
+- **Adjustable Parameters**: The contrast, saturation, and brightness enhancement factors can be adjusted to better suit the specific characteristics of the image. The default factors are set to `1.5` for contrast and saturation, and `1.2` for brightness.
+- **Denoising**: The denoising step is optional and can be customized or skipped if the image is already clean or if noise reduction is not necessary.
 
-This function is particularly useful for preprocessing scanned documents, where text needs to be **clearly visible**, and **bleed-through** from the other side of the page needs to be minimized.
+This function is particularly useful for preprocessing scanned documents, making text clearer and reducing the visibility of any bleed-through from the reverse side of the page.
