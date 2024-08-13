@@ -19,6 +19,9 @@
 **enhance color contrast**
 <img src="ss4.png"/>
 
+**enhance color contrast and black & white**
+<img src="ss5.png"/>
+
 ## ⚙️Tech-Stack
 - **Python**
 - **OpenCV**

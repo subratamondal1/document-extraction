@@ -108,7 +108,8 @@ def enhance_color_contrast(uploaded_image):
     # Convert the image to grayscale
     grayscale_image = final_pil_image.convert('L')
 
-    # Apply a binary threshold to convert the image to black and white
-    bw_image = grayscale_image.point(lambda x: 0 if x < 128 else 255, '1')
+    # Adjust the brightness of the grayscale image
+    brightness_enhancer = ImageEnhance.Brightness(grayscale_image)
+    brightened_image = brightness_enhancer.enhance(1.2)
 
-    return bw_image
+    return brightened_image
