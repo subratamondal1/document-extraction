@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 from preprocess_image import grayscale_contrast, adobe_like_preprocessing, enhance_color_contrast
+from detect_table import detect_tables_in_handwritten_image
 import io
 
 st.markdown("<center><h1>📜📄 Document Extraction</h1></center>",
@@ -16,8 +17,10 @@ if uploaded_image:
     #preprocessed_image = grayscale_contrast(uploaded_image)
     # preprocessed_image = adobe_like_preprocessing(uploaded_image)
     preprocessed_image = enhance_color_contrast(uploaded_image)
+    # Detect table
+    preprocessed_image = detect_tables_in_handwritten_image(preprocessed_image)
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.write("#### `Original Image`")
@@ -27,12 +30,17 @@ if uploaded_image:
 
     with col2:
         st.write("#### `Processed Image`")
-        st.image(preprocessed_image,
+        st.image(preprocessed_image[0],
+                 caption="Processed Image",
+                 use_column_width=True)
+    with col3:
+        st.write("#### `Cropped Image`")
+        st.image(preprocessed_image[1],
                  caption="Processed Image",
                  use_column_width=True)
 
     img_byte_arr = io.BytesIO()
-    preprocessed_image.save(img_byte_arr, format='PNG')
+    preprocessed_image[0].save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
 
     # Add a download button
