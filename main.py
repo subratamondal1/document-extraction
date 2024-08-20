@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 from preprocess_image import grayscale_contrast, adobe_like_preprocessing, enhance_color_contrast
 from detect_table import detect_tables_in_handwritten_image
+from crop import crop_image
 import io
 
 st.markdown("<center><h1>📜📄 Document Extraction</h1></center>",
@@ -34,10 +35,14 @@ if uploaded_image:
                  caption="Processed Image",
                  use_column_width=True)
     with col3:
-        st.write("#### `Cropped Image`")
+        st.write("#### `Cropped Images`")
         st.image(preprocessed_image[1],
-                 caption="Processed Image",
+                 caption="Cropped Image",
                  use_column_width=True)
+        # for idx, cropped_img in enumerate(preprocessed_image[1]):
+        #     st.image(cropped_img,
+        #              caption=f"Cropped Image {idx + 1}",
+        #              use_column_width=True)
 
     img_byte_arr = io.BytesIO()
     preprocessed_image[0].save(img_byte_arr, format='PNG')
